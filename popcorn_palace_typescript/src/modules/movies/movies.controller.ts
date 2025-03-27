@@ -6,12 +6,12 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Post()
-  create(@Body() body: { title: string; duration: number }) {
-    return this.moviesService.create(body.title, body.duration);
-  }
+    create(@Body() body: { title: string; duration: number }) {
+      return this.moviesService.create(body.title, body.duration);
+    }
 
-  @Get()
-  findAll() {
-    return this.moviesService.findAll();
+    @Get()
+    findAll() {
+      return this.moviesService.findAll();
+    }
   }
-}
