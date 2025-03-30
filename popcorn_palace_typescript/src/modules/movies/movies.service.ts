@@ -10,8 +10,8 @@ export class MoviesService {
     private moviesRepository: Repository<Movie>,
   ) {}
 
-  create(title: string, duration: number): Promise<Movie> {
-    const movie = this.moviesRepository.create({ title, duration });
+  create(title: string, genre:string, duration: number, rating: number, releaseYear: number ): Promise<Movie> {
+    const movie = this.moviesRepository.create({ title, genre, duration, rating, releaseYear });
     return this.moviesRepository.save(movie);
   }
 

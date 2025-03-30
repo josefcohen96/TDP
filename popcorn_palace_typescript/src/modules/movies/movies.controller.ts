@@ -6,8 +6,8 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Post()
-    create(@Body() body: { title: string; duration: number }) {
-      return this.moviesService.create(body.title, body.duration);
+    create(@Body() body: { title: string; genre:string, duration: number, rating: number, releaseYear: number }) {
+      return this.moviesService.create(body.title, body.genre, body.duration, body.rating, body.releaseYear);
     }
 
     @Get()
