@@ -6,7 +6,7 @@ export class CreateMovieDto {
     title: string;
 
     @IsInt()
-    @Min(0) // Darution should be a positive number
+    @Min(1) // Darution should be a positive number
     duration: number;
 
     @IsOptional()
@@ -21,7 +21,7 @@ export class CreateMovieDto {
 
     @IsOptional()
     @IsInt()
-    @Max(new Date().getFullYear() + 1) // Release year should not be in the future
+    @Max(new Date().getFullYear() + 1)  // Release year should not be in the future
     @Min(1888) // The first film was made in 1888
     releaseYear?: number;
 }
