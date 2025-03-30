@@ -13,7 +13,7 @@ export class ScreeningsService {
     private moviesRepository: Repository<Movie>,
   ) {}
 
-  async create(movieId: string, hall: string, startTime: Date): Promise<Screening> {
+  async create(movieId: string, hall: string, startTime: Date, price: number): Promise<Screening> {
     console.log(`Creating a screening for movieId: ${movieId}, hall: ${hall}, startTime: ${startTime}`);
 
     const movie = await this.moviesRepository.findOneBy({ id: movieId });
@@ -41,7 +41,7 @@ export class ScreeningsService {
       throw new BadRequestException('Screening conflict at the same time.');
     }
 
-    const screening = this.screeningsRepository.create({ movie, hall, startTime, endTime });
+    const screening = this.screeningsRepository.create({ movie, hall, startTime, endTime, price });
     console.log(`Screening created: ${JSON.stringify(screening)}`);
 
     const savedScreening = await this.screeningsRepository.save(screening);

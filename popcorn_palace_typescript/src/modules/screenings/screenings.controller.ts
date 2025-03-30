@@ -6,8 +6,8 @@ export class ScreeningsController {
   constructor(private readonly screeningsService: ScreeningsService) {}
 
   @Post()
-  create(@Body() body: { movieId: string; hall: string; startTime: Date }) {
-    return this.screeningsService.create(body.movieId, body.hall, new Date(body.startTime));
+  create(@Body() body: { movieId: string; hall: string; startTime: Date, price: number }) {
+    return this.screeningsService.create(body.movieId, body.hall,  new Date(body.startTime), body.price);
   }
 
   @Get()

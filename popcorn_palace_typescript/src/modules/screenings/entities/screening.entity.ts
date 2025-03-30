@@ -19,4 +19,7 @@ export class Screening {
 
   @Column({ type: 'timestamp' })
   endTime: Date;
+
+  @Column({ type: 'float' })
+  price: number; // price of the screening in dollars
 }
