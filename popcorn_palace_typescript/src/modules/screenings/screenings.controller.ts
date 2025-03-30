@@ -1,17 +1,41 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Delete,
+} from '@nestjs/common';
 import { ScreeningsService } from './screenings.service';
+import { CreateScreeningDto } from './dto/create-screening.dto';
+import { UpdateScreeningDto } from './dto/update-screening.dto';
+import { IsUUID } from 'class-validator';
 
 @Controller('screenings')
 export class ScreeningsController {
   constructor(private readonly screeningsService: ScreeningsService) {}
 
   @Post()
-  create(@Body() body: { movieId: string; hall: string; startTime: Date, price: number }) {
-    return this.screeningsService.create(body.movieId, body.hall,  new Date(body.startTime), body.price);
+  create(@Body() createDto: CreateScreeningDto) {
+    return this.screeningsService.create(createDto);
   }
 
-  @Get()
-  findAll() {
-    return this.screeningsService.findAll();
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.screeningsService.findOne(id);
+  // }
+
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateDto: UpdateScreeningDto,
+  // ) {
+  //   return this.screeningsService.update(id, updateDto);
+  // }
+
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.screeningsService.remove(id);
+  // }
 }

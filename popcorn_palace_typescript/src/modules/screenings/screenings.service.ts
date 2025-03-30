@@ -1,8 +1,14 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Screening } from './entities/screening.entity';
 import { Movie } from '../movies/entities/movie.entity';
+import { Hall } from '../halls-seats/entities/hall.entity';
+import { CreateScreeningDto } from './dto/create-screening.dto';
 
 @Injectable()
 export class ScreeningsService {
@@ -11,46 +17,52 @@ export class ScreeningsService {
     private screeningsRepository: Repository<Screening>,
     @InjectRepository(Movie)
     private moviesRepository: Repository<Movie>,
-  ) {}
+    @InjectRepository(Hall)
+    private hallsRepository: Repository<Hall>,
+  ) { }
 
-  async create(movieId: string, hall: string, startTime: Date, price: number): Promise<Screening> {
-    console.log(`Creating a screening for movieId: ${movieId}, hall: ${hall}, startTime: ${startTime}`);
+  async create(
+    createDto: CreateScreeningDto,
+  ): Promise<Screening> {
+    const { movieId, hallId, startTime, price } = createDto;
 
     const movie = await this.moviesRepository.findOneBy({ id: movieId });
-    console.log(`Movie fetched: ${movie ? JSON.stringify(movie) : 'Movie not found'}`);
-
     if (!movie) {
-      console.error('Movie not found');
-      throw new BadRequestException('Movie not found');
+      throw new NotFoundException('Movie not found');
     }
 
-    const endTime = new Date(startTime.getTime() + movie.duration * 60000);
-    console.log(`Calculated endTime: ${endTime}`);
+    const hall = await this.hallsRepository.findOne({where: { id: hallId },});
+    if (!hall) {
+      throw new NotFoundException('Hall not found');
+    }
 
-    // בדיקת כפילות
-    const conflictingScreening = await this.screeningsRepository.findOne({
-      where: {
-        hall,
-        startTime,
-      },
+    const start = new Date(startTime);
+    const end = new Date(start.getTime() + movie.duration * 60000);
+
+    const overlapping = await this.screeningsRepository
+      .createQueryBuilder('screening')
+      .leftJoin('screening.hall', 'hall')
+      .where('hall.id = :hallId', { hallId })
+      .andWhere(
+        '(screening.startTime < :endTime AND screening.endTime > :startTime)',
+        { startTime: start, endTime: end },
+      )
+      .getOne();
+
+    if (overlapping) {
+      throw new BadRequestException(
+        'There is already a screening in this hall at this time.',
+      );
+    }
+
+    const screening = this.screeningsRepository.create({
+      movie,
+      hall,
+      startTime: start,
+      endTime: end,
+      price,
     });
-    console.log(`Conflicting screening: ${conflictingScreening ? JSON.stringify(conflictingScreening) : 'None'}`);
 
-    if (conflictingScreening) {
-      console.error('Screening conflict at the same time.');
-      throw new BadRequestException('Screening conflict at the same time.');
-    }
-
-    const screening = this.screeningsRepository.create({ movie, hall, startTime, endTime, price });
-    console.log(`Screening created: ${JSON.stringify(screening)}`);
-
-    const savedScreening = await this.screeningsRepository.save(screening);
-    console.log(`Screening saved: ${JSON.stringify(savedScreening)}`);
-
-    return savedScreening;
-  }
-
-  findAll(): Promise<Screening[]> {
-    return this.screeningsRepository.find();
+    return this.screeningsRepository.save(screening);
   }
 }

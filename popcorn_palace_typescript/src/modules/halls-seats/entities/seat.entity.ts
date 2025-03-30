@@ -1,4 +1,3 @@
-// seat.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Hall } from './hall.entity';
 
