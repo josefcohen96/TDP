@@ -1,52 +1,51 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
-import { Screening } from '../screenings/entities/screening.entity';
-import { Seat } from '../halls-seats/entities/seat.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { Screening } from '../screenings/entities/screening.entity';
+import { ScreeningSeat } from '../screenings/entities/screening-seat.entity';
 
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(Booking)
-    private bookingsRepo: Repository<Booking>,
+    private readonly bookingsRepository: Repository<Booking>,
 
     @InjectRepository(Screening)
-    private screeningsRepo: Repository<Screening>,
+    private readonly screeningsRepository: Repository<Screening>,
 
-    @InjectRepository(Seat)
-    private seatsRepo: Repository<Seat>,
+    @InjectRepository(ScreeningSeat)
+    private readonly screeningSeatsRepository: Repository<ScreeningSeat>
   ) {}
 
-  async create(dto: CreateBookingDto): Promise<Booking[]> {
-    const screening = await this.screeningsRepo.findOne({ where: { id: dto.screeningId } });
-    if (!screening) throw new BadRequestException('Screening not found');
+  async create(dto: CreateBookingDto): Promise<{ success: boolean; bookedSeats?: string[]; unavailableSeats?: string[] }> {
+    const { screeningId, seats } = dto;
 
-    const seats = await this.seatsRepo.findBy({ id: In(dto.seatIds) });
-    if (seats.length !== dto.seatIds.length) {
-      throw new BadRequestException('One or more seats not found');
-    }
+    const screening = await this.screeningsRepository.findOne({ where: { id: screeningId } });
+    if (!screening) throw new NotFoundException('Screening not found');
 
-    const existingBookings = await this.bookingsRepo.find({
-      where: {
-        screening: { id: dto.screeningId },
-        seat: In(dto.seatIds),
-      },
+    // שלוף את הכיסאות הנבחרים מההקרנה
+    const seatRecords = await this.screeningSeatsRepository.find({
+      where: seats.map(seatName => ({ screening: { id: screeningId }, seatName }))
     });
 
-    if (existingBookings.length > 0) {
-      throw new BadRequestException('Some seats are already booked');
+    // מצא כיסאות תפוסים
+    const unavailable = seatRecords.filter(seat => !seat.isAvailable).map(seat => seat.seatName);
+    if (unavailable.length > 0) {
+      return { success: false, unavailableSeats: unavailable };
     }
 
-    const newBookings = seats.map((seat) =>
-      this.bookingsRepo.create({ screening, seat })
-    );
+    // עדכן כיסאות ל-isAvailable = false
+    for (const seat of seatRecords) {
+      seat.isAvailable = false;
+    }
+    await this.screeningSeatsRepository.save(seatRecords);
 
-    return this.bookingsRepo.save(newBookings);
-  }
+    // צור את ההזמנה
+    const booking = this.bookingsRepository.create({ screening, seatNames: seats });
+    await this.bookingsRepository.save(booking);
 
-  findAll(): Promise<Booking[]> {
-    return this.bookingsRepo.find();
+    return { success: true, bookedSeats: seats };
   }
 }

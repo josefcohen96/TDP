@@ -21,21 +21,26 @@ export class ScreeningsController {
     return this.screeningsService.create(createDto);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.screeningsService.findOne(id);
-  // }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.screeningsService.findOne(id);
+  }
 
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateDto: UpdateScreeningDto,
-  // ) {
-  //   return this.screeningsService.update(id, updateDto);
-  // }
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateScreeningDto,
+  ) {
+    return this.screeningsService.update(id, updateDto);
+  }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.screeningsService.remove(id);
-  // }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.screeningsService.remove(id);
+  }
+
+  @Get()
+  findAll() {
+    return this.screeningsService.findAll();
+  }
 }

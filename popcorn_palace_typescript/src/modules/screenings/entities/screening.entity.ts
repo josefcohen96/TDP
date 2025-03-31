@@ -1,7 +1,6 @@
-// screening.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Movie } from '../../movies/entities/movie.entity';
-import { Hall } from '../../halls-seats/entities/hall.entity'; // ודא שיש לך קובץ כזה
+import { ScreeningSeat } from './screening-seat.entity';
 
 @Entity()
 export class Screening {
@@ -12,9 +11,8 @@ export class Screening {
   @JoinColumn({ name: 'movie_id' })
   movie: Movie;
 
-  @ManyToOne(() => Hall, { eager: true })
-  @JoinColumn({ name: 'hall_id' })
-  hall: Hall;
+  @Column()
+  hallName: string;
 
   @Column({ type: 'timestamp' })
   startTime: Date;
@@ -23,5 +21,8 @@ export class Screening {
   endTime: Date;
 
   @Column({ type: 'float' })
-  price: number; // price of the screening in dollars
+  price: number;
+
+  @OneToMany(() => ScreeningSeat, (seat) => seat.screening)
+  seats: ScreeningSeat[];
 }

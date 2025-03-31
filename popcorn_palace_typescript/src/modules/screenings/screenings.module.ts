@@ -4,9 +4,9 @@ import { ScreeningsService } from './screenings.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Screening } from './entities/screening.entity';
 import { Movie } from '../movies/entities/movie.entity';
-import { Hall } from '../halls-seats/entities/hall.entity'; 
+import { ScreeningSeat} from './entities/screening-seat.entity'; 
 @Module({
-  imports: [TypeOrmModule.forFeature([Screening, Movie, Hall])],
+  imports: [TypeOrmModule.forFeature([Screening, Movie, ScreeningSeat])],
   controllers: [ScreeningsController],
   providers: [ScreeningsService],
 })

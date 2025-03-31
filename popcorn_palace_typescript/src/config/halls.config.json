@@ -1,0 +1,35 @@
+[
+    {
+      "name": "Hall 1",
+      "capacity": 38,
+      "layout": [
+        { "row": "A", "length": 10 },
+        { "row": "B", "length": 10 },
+        { "row": "C", "length": 8 },
+        { "row": "D", "length": 6 },
+        { "row": "E", "length": 4 }
+      ]
+    },
+    {
+      "name": "Hall 2",
+      "capacity": 32,
+      "layout": [
+        { "row": "A", "length": 8 },
+        { "row": "B", "length": 6 },
+        { "row": "C", "length": 6 },
+        { "row": "D", "length": 6 },
+        { "row": "E", "length": 6 }
+      ]
+    },
+    {
+      "name": "Hall 3",
+      "capacity": 42,
+      "layout": [
+        { "row": "A", "length": 12 },
+        { "row": "B", "length": 10 },
+        { "row": "C", "length": 8 },
+        { "row": "D", "length": 6 },
+        { "row": "E", "length": 6 }
+      ]
+    }
+  ]

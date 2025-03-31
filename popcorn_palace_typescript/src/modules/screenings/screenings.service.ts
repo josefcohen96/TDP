@@ -1,14 +1,12 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Screening } from './entities/screening.entity';
 import { Movie } from '../movies/entities/movie.entity';
-import { Hall } from '../halls-seats/entities/hall.entity';
 import { CreateScreeningDto } from './dto/create-screening.dto';
+import { getHallLayout } from '../../config/load-halls';
+import { ScreeningSeat } from './entities/screening-seat.entity';
+import { UpdateScreeningDto } from './dto/update-screening.dto';
 
 @Injectable()
 export class ScreeningsService {
@@ -17,52 +15,94 @@ export class ScreeningsService {
     private screeningsRepository: Repository<Screening>,
     @InjectRepository(Movie)
     private moviesRepository: Repository<Movie>,
-    @InjectRepository(Hall)
-    private hallsRepository: Repository<Hall>,
+    @InjectRepository(ScreeningSeat)
+    private screeningSeatsRepository: Repository<ScreeningSeat>,
   ) { }
 
-  async create(
-    createDto: CreateScreeningDto,
-  ): Promise<Screening> {
-    const { movieId, hallId, startTime, price } = createDto;
+  async create(dto: CreateScreeningDto): Promise<Screening> {
+    const { movieId, hallName, startTime, price } = dto;
 
     const movie = await this.moviesRepository.findOneBy({ id: movieId });
-    if (!movie) {
-      throw new NotFoundException('Movie not found');
-    }
+    if (!movie) throw new BadRequestException('Movie not found');
 
-    const hall = await this.hallsRepository.findOne({where: { id: hallId },});
-    if (!hall) {
-      throw new NotFoundException('Hall not found');
-    }
+    const layout = getHallLayout(hallName);
+    if (!layout) throw new NotFoundException('Hall not found');
 
     const start = new Date(startTime);
     const end = new Date(start.getTime() + movie.duration * 60000);
 
-    const overlapping = await this.screeningsRepository
-      .createQueryBuilder('screening')
-      .leftJoin('screening.hall', 'hall')
-      .where('hall.id = :hallId', { hallId })
-      .andWhere(
-        '(screening.startTime < :endTime AND screening.endTime > :startTime)',
-        { startTime: start, endTime: end },
-      )
-      .getOne();
-
-    if (overlapping) {
-      throw new BadRequestException(
-        'There is already a screening in this hall at this time.',
-      );
-    }
+    const conflict = await this.screeningsRepository.findOne({
+      where: { hallName, startTime: start },
+    });
+    if (conflict) throw new BadRequestException('Screening already exists at this time in this hall');
 
     const screening = this.screeningsRepository.create({
       movie,
-      hall,
+      hallName,
       startTime: start,
       endTime: end,
       price,
     });
 
+    const savedScreening = await this.screeningsRepository.save(screening);
+
+    const screeningSeats: ScreeningSeat[] = [];
+    for (const row of layout.layout) {
+      for (let i = 1; i <= row.length; i++) {
+        const seatName = `${row.row}${i}`;
+        screeningSeats.push(this.screeningSeatsRepository.create({
+          screening: savedScreening,
+          seatName,
+          isAvailable: true,
+        }));
+      }
+    }
+
+    await this.screeningSeatsRepository.save(screeningSeats);
+
+    return savedScreening;
+  }
+
+  async update(id: string, dto: UpdateScreeningDto): Promise<Screening> {
+    const screening = await this.screeningsRepository.findOne({ where: { id } });
+    if (!screening) throw new NotFoundException('Screening not found');
+
+    if (dto.startTime) {
+      const movie = screening.movie;
+      const start = new Date(dto.startTime);
+      screening.startTime = start;
+      screening.endTime = new Date(start.getTime() + movie.duration * 60000);
+    }
+
+    if (dto.hallName) {
+      const layout = getHallLayout(dto.hallName);
+      if (!layout) throw new NotFoundException('Hall not found');
+      screening.hallName = dto.hallName;
+    }
+
+    if (dto.price !== undefined) {
+      if (dto.price < 0) throw new BadRequestException('Price must be a positive number');
+      screening.price = dto.price;
+    }
+
     return this.screeningsRepository.save(screening);
   }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.screeningsRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Screening not found');
+    }
+  }
+
+  async findOne(id: string): Promise<Screening> {
+    const screening = await this.screeningsRepository.findOne({ where: { id } });
+    if (!screening) throw new NotFoundException('Screening not found');
+    return screening;
+  }
+
+  findAll(): Promise<Screening[]> {
+    return this.screeningsRepository.find();
+  }
+
 }

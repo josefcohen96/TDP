@@ -1,17 +1,15 @@
-import { IsUUID, IsDateString, IsNumber, Min } from 'class-validator';
+import { IsUUID, IsString, IsDateString, IsNumber, Min } from 'class-validator';
 
 export class CreateScreeningDto {
   @IsUUID()
   movieId: string;
 
-  @IsUUID()
-  hallId: string;
 
+  @IsString()
+  hallName: string;
+  
   @IsDateString()
   startTime: string;
-
-  @IsDateString()
-  endTime: string;
 
   @IsNumber()
   @Min(0)

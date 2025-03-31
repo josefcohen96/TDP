@@ -4,8 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MoviesModule } from './modules/movies/movies.module';
 import { ScreeningsModule } from './modules/screenings/screenings.module';
-import { HallsSeatsModule } from './modules/halls-seats/halls-seats.module';
-import {BookingsModule } from './modules/booking/bookings.module';
+import { BookingsModule } from './modules/booking/bookings.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -25,8 +24,8 @@ import {BookingsModule } from './modules/booking/bookings.module';
     }),
     MoviesModule,
     ScreeningsModule,
-    HallsSeatsModule,
     BookingsModule,
+    
   ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { IsUUID, IsArray, ArrayNotEmpty } from 'class-validator';
+import { IsUUID, IsArray, ArrayNotEmpty, IsString } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -6,6 +6,6 @@ export class CreateBookingDto {
 
   @IsArray()
   @ArrayNotEmpty()
-  @IsUUID('all', { each: true })
-  seatIds: string[];
+  @IsString({ each: true })
+  seats: string[]; // לדוגמה: ["A1", "B3"]
 }
