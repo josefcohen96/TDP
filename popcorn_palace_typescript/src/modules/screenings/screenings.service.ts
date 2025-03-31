@@ -8,6 +8,7 @@ import { getHallLayout } from '../../config/load-halls';
 import { ScreeningSeat } from './entities/screening-seat.entity';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
 import { AppLogger } from '../../common/app.logger';
+
 @Injectable()
 export class ScreeningsService {
   private readonly logger = new AppLogger(ScreeningsService.name);
