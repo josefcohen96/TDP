@@ -10,6 +10,7 @@ describe('ScreeningsController (e2e)', () => {
     let app: INestApplication;
     let dataSource: DataSource;
     let screeningId: string;
+    let movieId: string;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -33,7 +34,7 @@ describe('ScreeningsController (e2e)', () => {
             })
             .expect(201);
 
-        const movieId = movieRes.body.id;
+        movieId = movieRes.body.id;
 
         const screeningRes = await request(app.getHttpServer())
             .post('/screenings')
@@ -85,5 +86,22 @@ describe('ScreeningsController (e2e)', () => {
         await request(app.getHttpServer())
             .delete(`/screenings/${screeningId}`)
             .expect(204);
+    });
+
+    it('POST /screenings - should fail when endTime is before startTime', async () => {
+        const startTime = '2025-06-03T20:00:00.000Z';
+        const endTime = '2025-06-03T18:00:00.000Z'; // invalid
+
+        await request(app.getHttpServer())
+            .post('/screenings')
+            .send({
+                movieId,
+                hallName: 'Hall 1',
+                startTime,
+                endTime,
+                price: 42,
+            })
+            .expect(400);
+            
     });
 });

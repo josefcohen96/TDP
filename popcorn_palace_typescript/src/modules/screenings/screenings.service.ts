@@ -8,6 +8,7 @@ import { getHallLayout } from '../../config/load-halls';
 import { ScreeningSeat } from './entities/screening-seat.entity';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
 import { AppLogger } from '../../common/app.logger';
+import e from 'express';
 
 @Injectable()
 export class ScreeningsService {
@@ -22,7 +23,7 @@ export class ScreeningsService {
   ) { }
 
   async create(dto: CreateScreeningDto): Promise<Screening> {
-    const { movieId, hallName, startTime, price } = dto;
+    const { movieId, hallName, startTime, price, endTime } = dto;
     this.logger.log(`Creating screening: ${JSON.stringify(dto)}`);
     const movie = await this.moviesRepository.findOneBy({ id: movieId });
     if (!movie) throw new BadRequestException('Movie not found');
@@ -33,7 +34,18 @@ export class ScreeningsService {
       throw new NotFoundException('Hall not found');
     }
     const start = new Date(startTime);
-    const end = new Date(start.getTime() + movie.duration * 60000);
+    let end: Date;
+
+    if (endTime) {
+      end = new Date(endTime); // Use the provided endTime
+      if (end <= start) {
+        this.logger.warn(`End time must be after start time: ${startTime} - ${endTime}`);
+        throw new BadRequestException('End time must be after start time');
+      }
+    } else {
+      const durationInMs = movie.duration * 60 * 1000; // Convert minutes to milliseconds
+      end = new Date(start.getTime() + durationInMs); // Calculate endTime based on movie duration
+    }
 
     const conflict = await this.screeningsRepository.findOne({
       where: { hallName, startTime: start },

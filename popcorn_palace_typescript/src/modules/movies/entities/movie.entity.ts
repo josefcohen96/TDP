@@ -9,16 +9,16 @@ export class Movie {
   @Column()
   title: string;
 
-  @Column({ nullable: true })  // הוסף את זה
-  genre: string; // movie genre
+  @Column({ nullable: true })  
+  genre: string;
 
   @Column()
-  duration: number; // movie duration in minutes
+  duration: number;
 
   @Column({ type: 'float', nullable: true }) 
-  rating: number; // movie rating (1-10)
+  rating: number;
 
-  @Column({ type: 'int', nullable: true }) // שנה לדוגמה: 2020
+  @Column({ type: 'int', nullable: true }) 
   releaseYear: number;
 
   @OneToMany(() => Screening, (screening) => screening.movie)

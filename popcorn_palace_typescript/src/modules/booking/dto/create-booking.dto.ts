@@ -7,5 +7,5 @@ export class CreateBookingDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
-  seats: string[]; // לדוגמה: ["A1", "B3"]
+  seats: string[]; // ["A1", "B3"]
 }
