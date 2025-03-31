@@ -5,9 +5,12 @@ import { Booking } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Screening } from '../screenings/entities/screening.entity';
 import { ScreeningSeat } from '../screenings/entities/screening-seat.entity';
+import { AppLogger } from '../../common/app.logger';
 
 @Injectable()
 export class BookingsService {
+  private readonly logger = new AppLogger(BookingsService.name);
+
   constructor(
     @InjectRepository(Booking)
     private readonly bookingsRepository: Repository<Booking>,
@@ -17,34 +20,51 @@ export class BookingsService {
 
     @InjectRepository(ScreeningSeat)
     private readonly screeningSeatsRepository: Repository<ScreeningSeat>
-  ) {}
+  ) { }
 
-  async create(dto: CreateBookingDto): Promise<{ success: boolean; bookedSeats?: string[]; unavailableSeats?: string[] }> {
+  async create(dto: CreateBookingDto): Promise<{
+    success: boolean;
+    bookedSeats?: string[];
+    unavailableSeats?: string[];
+    notInRange?: string[];
+  }> {
+
     const { screeningId, seats } = dto;
+    this.logger.log(`Creating booking for screeningId=${screeningId} and seats=${seats.join(',')}`);
 
     const screening = await this.screeningsRepository.findOne({ where: { id: screeningId } });
-    if (!screening) throw new NotFoundException('Screening not found');
+    if (!screening) {
+      this.logger.warn(`Screening not found: ${screeningId}`);
+      throw new NotFoundException('Screening not found');
+    }
 
-    // שלוף את הכיסאות הנבחרים מההקרנה
+
     const seatRecords = await this.screeningSeatsRepository.find({
       where: seats.map(seatName => ({ screening: { id: screeningId }, seatName }))
     });
 
-    // מצא כיסאות תפוסים
+    const foundSeatNames = seatRecords.map(seat => seat.seatName);
+    const notInRange = seats.filter(seat => !foundSeatNames.includes(seat));
+    if (notInRange.length > 0) {
+      this.logger.warn(`Seats not in range: ${notInRange.join(',')}`);
+      return { success: false, notInRange };
+    }
+
     const unavailable = seatRecords.filter(seat => !seat.isAvailable).map(seat => seat.seatName);
     if (unavailable.length > 0) {
+      this.logger.warn(`Seats unavailable: ${unavailable.join(',')}`);
       return { success: false, unavailableSeats: unavailable };
     }
 
-    // עדכן כיסאות ל-isAvailable = false
     for (const seat of seatRecords) {
       seat.isAvailable = false;
     }
     await this.screeningSeatsRepository.save(seatRecords);
 
-    // צור את ההזמנה
     const booking = this.bookingsRepository.create({ screening, seatNames: seats });
     await this.bookingsRepository.save(booking);
+
+    this.logger.log(`Booking successful for seats: ${seats.join(',')}`);
 
     return { success: true, bookedSeats: seats };
   }

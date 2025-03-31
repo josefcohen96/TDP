@@ -5,12 +5,12 @@ import { BookingsController } from './bookings.controller';
 import { Booking } from './entities/booking.entity';
 import { Screening } from '../screenings/entities/screening.entity';
 import { ScreeningSeat } from '../screenings/entities/screening-seat.entity';
-
+import { BookingsGateway } from './bookings.gateway';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking, Screening, ScreeningSeat])
   ],
-  providers: [BookingsService],
+  providers: [BookingsService,BookingsGateway],
   controllers: [BookingsController],
 })
 export class BookingsModule {}
