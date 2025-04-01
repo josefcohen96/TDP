@@ -89,7 +89,7 @@ describe('ShowtimesController (e2e)', () => {
   it('DELETE /showtimes/:id - should delete showtime', async () => {
     const newShowtime = await request(app.getHttpServer())
       .post('/showtimes')
-      .send({ movieId, theater: 'Hall 1', startTime: '2025-06-01T18:00:00.000Z', endTime: '2025-06-01T20:00:00.000Z', price: 42 })
+      .send({ movieId, theater: 'Hall 2', startTime: '2025-06-01T18:00:00.000Z', endTime: '2025-06-01T20:00:00.000Z', price: 42 })
       .expect(201);
 
     await request(app.getHttpServer())
@@ -152,6 +152,6 @@ describe('ShowtimesController (e2e)', () => {
   it('DELETE /showtimes/:id - should return 404 for non-existent showtime', async () => {
     await request(app.getHttpServer())
       .delete('/showtimes/00000000-0000-0000-0000-1234567890123')
-      .expect(500); // TBDF : check if should be 500 or 404
+      .expect(500); // TBD : check if should be 500 or 404
   });
 });

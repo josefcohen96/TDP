@@ -1,7 +1,7 @@
 
 # 🎬 Popcorn Palace – Backend Assignment
 
-Welcome to the **Popcorn Palace** backend – a full-featured movie booking system using **NestJS**, **TypeORM**, and **PostgreSQL**. This project showcases strong validation, clean architecture, per-screening seat generation, and a well-tested booking flow.
+Welcome to the **Popcorn Palace** backend – a full-featured movie booking system using **NestJS**, **TypeORM**, and **PostgreSQL**. This project showcases strong validation, clean architecture, per-showtime seat generation, and a well-tested booking flow.
 
 ---
 
@@ -16,7 +16,7 @@ Full CRUD operations.
 **Validation** via DTOs (`class-validator`).
 
 ### 🎟️ Showtimes
-Associate a screening with a Movie, Hall, `startTime`, `endTime`, and `price`.
+Associate a showtime with a Movie, Hall, `startTime`, `endTime`, and `price`.
 
 Auto-generates seat map based on hall config.
 
@@ -38,16 +38,16 @@ endTime = startTime + movie.duration (in minutes)
 ---
 
 ### 🪑 Seats
-Each screening gets its own layout of seats.
+Each showtime gets its own layout of seats.
 
-Seat numbers are numeric (`1`, `2`, `3`, ...) and linked to the screening.
+Seat numbers are numeric (`1`, `2`, `3`, ...) and linked to the showtime.
 
 The layout is loaded from `/config/halls.config.json`.
 
 ---
 
 ### 🎫 Bookings
-Users can book one or more seats for a screening.
+Users can book one or more seats for a showtime.
 
 **Input**:
 ```json
@@ -241,6 +241,6 @@ src/
 
 ## 🎉 Final Notes
 
-- Seats are dynamically created per screening based on static JSON layout.
+- Seats are dynamically created per showtime based on static JSON layout.
 - Bookings are idempotent for occupied seats.
 - Logs are clear and helpful with custom `AppLogger`.
