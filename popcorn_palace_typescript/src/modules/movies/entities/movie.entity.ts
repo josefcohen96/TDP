@@ -1,5 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Showtime } from '../../showtimes/entities/showtime.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Min, Max } from 'class-validator';
 
 @Entity()
 export class Movie {
@@ -9,15 +9,16 @@ export class Movie {
   @Column({ unique: true })
   title: string;
 
-  @Column({ nullable: true })  
+  @Column({ nullable: true })
   genre: string;
 
   @Column()
   duration: number;
-
-  @Column({ type: 'float', nullable: true }) 
+  @Min(1)
+  @Max(10)
+  @Column({ type: 'float', nullable: true })
   rating: number;
 
-  @Column({ type: 'int', nullable: true }) 
+  @Column({ type: 'int', nullable: true })
   releaseYear: number;
 }
