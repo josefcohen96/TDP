@@ -50,12 +50,38 @@ Welcome to the **Popcorn Palace** backend project – a fully functional movie b
 
 ### Installation & Running
 
+Navigate to the project directory:
+
+```bash
+cd tdp-2025-homework/popcorn_palace_typescript
+```
+
+Install dependencies:
+
 ```bash
 npm install
+```
+
+Ensure your `.env` file exists in the `popcorn_palace_typescript` directory with the following content:
+
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=popcorn-palace
+DATABASE_PASS=popcorn-palace
+DATABASE_NAME=popcorn-palace
+PORT=3000
+
+LOG_LEVEL="log"/"debug"/"warn"/"error"
+```
+
+Run the development server:
+
+```bash
 npm run start:dev
 ```
 
-- Make sure PostgreSQL is up and `.env` (or `app.module.ts`) is properly configured.
+- Make sure PostgreSQL is up and configured properly.
 
 ---
 
@@ -176,52 +202,6 @@ POST /bookings
 - **Success** → `201 Created`
 - **Failure** → `200 OK` with reasons like `unavailableSeats` or `notInRange`
 
----
 
-## 🧼 Validation & Data Handling
 
-- **Global ValidationPipe**:
-  - `whitelist: true` → strips unknown fields
-  - `forbidNonWhitelisted: true` → throws error on unknown fields
-  - `transform: true` → converts inputs to correct types
-- **DTOs** ensure type-safety and consistency
 
----
-
-## 📁 Project Structure
-
-```
-src/
-├── modules/
-│   ├── movies/
-│   ├── screenings/
-│   ├── bookings/
-│   └── halls/ (config-based)
-├── common/
-│   └── app.logger.ts
-├── main.ts
-├── app.module.ts
-└── config/
-    └── load-halls.ts
-```
-
----
-
-## 📌 Notes
-
-- `endTime` is intelligently handled and validated.
-- Seats are uniquely generated per screening.
-- Bookings prevent double-seating.
-- Deleting a screening removes associated seats and blocks new bookings.
-
----
-
-## ✅ Final Tips
-
-- Follow DTO formats strictly for API requests.
-- Run tests frequently using `npm run test:e2e`.
-- Logging is handled with a custom `AppLogger` for clear output.
-
----
-
-Feel free to reach out if anything needs clarification!
