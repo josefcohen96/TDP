@@ -136,13 +136,7 @@ export class ShowtimesService {
   }
 
   async remove(id: string): Promise<void> {
-    const existing = await this.showtimesRepository.findOne({ where: { id } });
-
-    if (!existing) {
-      this.logger.warn(`Showtime ${id} not found`);
-      throw new NotFoundException('Showtime not found');
-    }
-
+  
     const result = await this.showtimesRepository.delete(id);
     if (result.affected === 0) {
       this.logger.warn(`Delete failed: Showtime ${id} not found`);

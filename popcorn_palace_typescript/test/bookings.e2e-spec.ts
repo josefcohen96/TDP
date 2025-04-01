@@ -27,7 +27,7 @@ describe('BookingsController (e2e)', () => {
     const movieRes = await request(app.getHttpServer())
       .post('/movies')
       .send({ title: 'Test Movie', duration: 120, genre: 'Action', rating: 8.2, releaseYear: 2022 })
-      .expect(201);
+      .expect(200);
 
     const movieId = movieRes.body.id;
 
@@ -40,7 +40,7 @@ describe('BookingsController (e2e)', () => {
         endTime: '2025-05-01T22:00:00.000Z',
         price: 50,
       })
-      .expect(201);
+      .expect(200);
 
     showtimeId = showtimeRes.body.id;
   });
@@ -57,7 +57,7 @@ describe('BookingsController (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/bookings')
       .send({ showtimeId, seatNumber: 5, userId })
-      .expect(201);
+      .expect(200);
 
     expect(res.body.success).toBe(true);
     expect(res.body.bookedSeat).toBe(5);
@@ -106,12 +106,12 @@ describe('BookingsController (e2e)', () => {
     const res1 = await request(app.getHttpServer())
       .post('/bookings')
       .send({ showtimeId, seatNumber: 6, userId })
-      .expect(201);
+      .expect(200);
 
     const res2 = await request(app.getHttpServer())
       .post('/bookings')
       .send({ showtimeId, seatNumber: 7, userId })
-      .expect(201);
+      .expect(200);
 
     expect(res1.body.bookedSeat).toBe(6);
     expect(res2.body.bookedSeat).toBe(7);

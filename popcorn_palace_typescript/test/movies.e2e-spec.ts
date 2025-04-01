@@ -38,7 +38,7 @@ describe('MoviesController (e2e)', () => {
         const response = await request(app.getHttpServer())
             .post('/movies')
             .send({ title: "Matrix", duration: 130, genre: "Sci-Fi", rating: 8.7, releaseYear: 1999 })
-            .expect(201);
+            .expect(200);
 
     });
 
@@ -64,7 +64,7 @@ describe('MoviesController (e2e)', () => {
         await request(app.getHttpServer())
             .post('/movies')
             .send({ title, duration: 130, genre: "Action", rating: 7.5, releaseYear: 2020 })
-            .expect(201);
+            .expect(200);
 
         const res = await request(app.getHttpServer())
             .post(`/movies/update/${title}`)

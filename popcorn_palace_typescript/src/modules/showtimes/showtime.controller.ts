@@ -18,22 +18,25 @@ export class ShowtimesController {
   constructor(private readonly showtimesService: ShowtimesService) {}
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   create(@Body() dto: CreateShowtimeDto) {
     return this.showtimesService.create(dto);
   }
 
-  @Post('update/:title')
+  @Post('update/:id')
   @HttpCode(HttpStatus.OK)
   update(@Param('id') id: string, @Body() dto: UpdateShowtimeDto) {
     return this.showtimesService.update(id, dto);
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.showtimesService.findOne(id);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string) {
     return this.showtimesService.remove(id);
   }

@@ -17,11 +17,11 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   async create(@Body() dto: CreateBookingDto, @Res() res: Response) {
     try {
       const result = await this.bookingsService.create(dto);
-      return res.status(HttpStatus.CREATED).json(result);
+      return res.status(HttpStatus.OK).json(result);
     } catch (error) {
       if (error instanceof NotFoundException) {
         return res.status(HttpStatus.NOT_FOUND).json({

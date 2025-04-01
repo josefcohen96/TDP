@@ -9,11 +9,13 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) { }
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   create(@Body() CreateMovieDto: CreateMovieDto) {
     return this.moviesService.create(CreateMovieDto);
   }
 
   @Get('all')
+  @HttpCode(HttpStatus.OK)
   findAll() {
     return this.moviesService.findAll();
   }
@@ -25,6 +27,7 @@ export class MoviesController {
   }
 
   @Delete(':title')
+  @HttpCode(HttpStatus.OK)
   remove(@Param('title') title: string) {
     return this.moviesService.remove(title);
   }

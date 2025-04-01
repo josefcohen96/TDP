@@ -201,7 +201,6 @@ npm run test:e2e
 }
 ```
 
-- **Success**: `201 Created`
 - **Seat Taken**: `200 OK` with `success: false`
 - **Invalid Input**: `400 Bad Request`
 - **Showtime Not Found**: `404 Not Found`
