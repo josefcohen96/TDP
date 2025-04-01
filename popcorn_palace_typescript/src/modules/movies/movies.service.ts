@@ -51,7 +51,7 @@ export class MoviesService {
       this.logger.warn(`Remove failed: Movie not found (ID: ${id})`);
       throw new NotFoundException('Movie not found');
     }
-    
+
     this.logger.log(`Movie removed: ${id}`);
   }
 
