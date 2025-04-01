@@ -5,33 +5,24 @@ export class AppLogger extends Logger {
     super(context);
   }
 
-  log(message: string) {
-    if (this.shouldLog('log')) {
-      super.log(message);
-    }
+  private formatMessage(message: string): string {
+    const timestamp = new Date().toISOString();
+    return `[${timestamp}] ${message}`;
   }
 
-  debug(message: string) {
-    if (this.shouldLog('debug')) {
-      super.debug(message);
-    }
+  override log(message: string) {
+    super.log(this.formatMessage(message));
   }
 
-  warn(message: string) {
-    if (this.shouldLog('warn')) {
-      super.warn(message);
-    }
+  override debug(message: string) {
+    super.debug(this.formatMessage(message));
   }
 
-  error(message: string, trace?: string) {
-    if (this.shouldLog('error')) {
-      super.error(message, trace);
-    }
+  override warn(message: string) {
+    super.warn(this.formatMessage(message));
   }
 
-  private shouldLog(level: 'log' | 'debug' | 'warn' | 'error'): boolean {
-    const logLevel = process.env.LOG_LEVEL || 'log';
-    const levels = ['log', 'debug', 'warn', 'error'];
-    return levels.indexOf(level) >= levels.indexOf(logLevel);
+  override error(message: string, trace?: string) {
+    super.error(this.formatMessage(message), trace);
   }
 }

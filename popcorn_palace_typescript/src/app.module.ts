@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MoviesModule } from './modules/movies/movies.module';
-import { ScreeningsModule } from './modules/screenings/screenings.module';
+import { ShowtimeModule } from './modules/showtimes/showtime.module';
 import { BookingsModule } from './modules/booking/bookings.module';
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { BookingsModule } from './modules/booking/bookings.module';
       }),
     }),
     MoviesModule,
-    ScreeningsModule,
+    ShowtimeModule,
     BookingsModule,
     
   ],

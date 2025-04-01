@@ -1,11 +1,12 @@
-import { IsUUID, IsArray, ArrayNotEmpty, IsString } from 'class-validator';
+import { IsUUID, IsNumber, } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
-  screeningId: string;
+  userId: string;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsString({ each: true })
-  seats: string[]; // ["A1", "B3"]
+  @IsUUID()
+  showtimeId: string;
+
+  @IsNumber()
+  seatNumber: number;
 }

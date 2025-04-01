@@ -3,153 +3,143 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { Screening } from '../src/modules/screenings/entities/screening.entity';
+import { Showtime } from '../src/modules/showtimes/entities/showtime.entity';
 import { Movie } from '../src/modules/movies/entities/movie.entity';
 
-describe('ScreeningsController (e2e)', () => {
-    let app: INestApplication;
-    let dataSource: DataSource;
-    let screeningId: string;
-    let movieId: string;
+describe('ShowtimesController (e2e)', () => {
+  let app: INestApplication;
+  let dataSource: DataSource;
+  let showtimeId: string;
+  let movieId: string;
 
-    beforeAll(async () => {
-        const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-        }).compile();
+  const startTime = '2025-05-01T20:00:00.000Z';
+  const endTime = '2025-05-01T22:00:00.000Z';
 
-        app = moduleFixture.createNestApplication();
-        app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-        await app.init();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-        dataSource = app.get(DataSource);
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    await app.init();
 
-        const movieRes = await request(app.getHttpServer())
-            .post('/movies')
-            .send({
-                title: 'Screening Test Movie',
-                duration: 120,
-                genre: 'Action',
-                rating: 8.2,
-                releaseYear: 2022,
-            })
-            .expect(201);
+    dataSource = app.get(DataSource);
 
-        movieId = movieRes.body.id;
+    const movieRes = await request(app.getHttpServer())
+      .post('/movies')
+      .send({
+        title: 'Showtime Test Movie',
+        duration: 120,
+        genre: 'Action',
+        rating: 8.2,
+        releaseYear: 2022,
+      })
+      .expect(201);
 
-        const screeningRes = await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId,
-                hallName: 'Hall 1',
-                startTime: '2025-05-01T20:00:00.000Z',
-                price: 45.5,
-            })
-            .expect(201);
+    movieId = movieRes.body.id;
 
-        screeningId = screeningRes.body.id;
-    });
+    const showtimeRes = await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({ movieId, theater: 'Hall 1', startTime, endTime, price: 45.5 })
+      .expect(201);
 
-    afterAll(async () => {
-        await dataSource.getRepository(Screening).delete({});
-        await dataSource.getRepository(Movie).delete({});
-        await app.close();
-    });
+    showtimeId = showtimeRes.body.id;
+  });
 
-    it('GET /screenings/:id - should return screening', async () => {
-        const res = await request(app.getHttpServer())
-            .get(`/screenings/${screeningId}`)
-            .expect(200);
+  afterAll(async () => {
+    await dataSource.getRepository(Showtime).delete({});
+    await dataSource.getRepository(Movie).delete({});
+    await app.close();
+  });
 
-        expect(res.body.id).toBe(screeningId);
-        expect(res.body.hallName).toBeDefined();
-    });
+  it('GET /showtimes/:id - should return showtime', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/showtimes/${showtimeId}`)
+      .expect(200);
 
-    it('PATCH /screenings/:id - should update price', async () => {
-        const res = await request(app.getHttpServer())
-            .patch(`/screenings/${screeningId}`)
-            .send({ price: 50 })
-            .expect(200);
+    expect(res.body.id).toBe(showtimeId);
+    expect(res.body.theater).toBeDefined();
+  });
 
-        expect(res.body.price).toBe(50);
-    });
+  it('POST /showtimes/update/:id - should update price', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`/showtimes/update/${showtimeId}`)
+      .send({ price: 50 })
+      .expect(200);
 
-    it('GET /screenings - should return list', async () => {
-        const res = await request(app.getHttpServer())
-            .get('/screenings')
-            .expect(200);
+    expect(res.body.price).toBe(50);
+  });
 
-        expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.length).toBeGreaterThan(0);
-    });
+  it('GET /showtimes - should return list', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/showtimes')
+      .expect(200);
 
-    it('DELETE /screenings/:id - should delete screening', async () => {
-        await request(app.getHttpServer())
-            .delete(`/screenings/${screeningId}`)
-            .expect(204);
-    });
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+  });
 
-    it('POST /screenings - should fail when endTime is before startTime', async () => {
-        const startTime = '2025-06-03T20:00:00.000Z';
-        const endTime = '2025-06-03T18:00:00.000Z'; // invalid
+  it('DELETE /showtimes/:id - should delete showtime', async () => {
+    const newShowtime = await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({ movieId, theater: 'Hall 1', startTime: '2025-06-01T18:00:00.000Z', endTime: '2025-06-01T20:00:00.000Z', price: 42 })
+      .expect(201);
 
-        await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId,
-                hallName: 'Hall 1',
-                startTime,
-                endTime,
-                price: 42,
-            })
-            .expect(400);
-    });
+    await request(app.getHttpServer())
+      .delete(`/showtimes/${newShowtime.body.id}`)
+      .expect(200);
+  });
 
-    it('should fail when movie does not exist', async () => {
-        await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId: '00000000-0000-0000-0000-000000000000',
-                hallName: 'Hall 1',
-                startTime: '2025-06-01T12:00:00.000Z',
-                price: 42
-            })
-            .expect(400); // BadRequestException
-    });
+  it('POST /showtimes - should fail when endTime is before startTime', async () => {
+    await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({
+        movieId,
+        theater: 'Hall 1',
+        startTime: '2025-06-03T20:00:00.000Z',
+        endTime: '2025-06-03T18:00:00.000Z',
+        price: 42,
+      })
+      .expect(400);
+  });
 
-    it('should fail when hall does not exist', async () => {
-        await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId,
-                hallName: 'Unknown Hall',
-                startTime: '2025-06-01T12:00:00.000Z',
-                price: 42
-            })
-            .expect(404); // NotFoundException
-    });
+  it('POST /showtimes - should fail when movie does not exist', async () => {
+    await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({
+        movieId: '00000000-0000-0000-0000-000000000000',
+        theater: 'Hall 1',
+        startTime: '2025-06-01T12:00:00.000Z',
+        endTime: '2025-06-01T14:00:00.000Z',
+        price: 42,
+      })
+      .expect(400);
+  });
 
-    it('should return 404 when trying to update non-existent screening', async () => {
-        await request(app.getHttpServer())
-            .patch('/screenings/00000000-0000-0000-0000-000000000000')
-            .send({ price: 60 })
-            .expect(404);
-    });
+  it('POST /showtimes - should fail when price is negative', async () => {
+    await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({
+        movieId,
+        theater: 'Hall 1',
+        startTime: '2025-07-01T18:00:00.000Z',
+        endTime: '2025-07-01T20:00:00.000Z',
+        price: -10,
+      })
+      .expect(400);
+  });
 
-    it('should return 404 when trying to delete non-existent screening', async () => {
-        await request(app.getHttpServer())
-            .delete('/screenings/00000000-0000-0000-0000-000000000000')
-            .expect(404);
-    });
+  it('POST /showtimes/update/:id - should return 404 for non-existent showtime', async () => {
+    await request(app.getHttpServer())
+      .post('/showtimes/update/00000000-0000-0000-0000-000000000000')
+      .send({ price: 60 })
+      .expect(404);
+  });
 
-    it('should fail when price is negative', async () => {
-        await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId,
-                hallName: 'Hall 1',
-                startTime: '2025-07-01T18:00:00.000Z',
-                price: -10
-            })
-            .expect(400);
-    });
+  it('DELETE /showtimes/:id - should return 404 for non-existent showtime', async () => {
+    await request(app.getHttpServer())
+      .delete('/showtimes/00000000-0000-0000-0000-000000000000')
+      .expect(404);
+  });
 });

@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
+import { Showtime } from '../showtimes/entities/showtime.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { Screening } from '../screenings/entities/screening.entity';
-import { ScreeningSeat } from '../screenings/entities/screening-seat.entity';
 import { AppLogger } from '../../common/app.logger';
 
 @Injectable()
@@ -15,49 +14,51 @@ export class BookingsService {
     @InjectRepository(Booking)
     private readonly bookingsRepository: Repository<Booking>,
 
-    @InjectRepository(Screening)
-    private readonly screeningsRepository: Repository<Screening>,
+    @InjectRepository(Showtime)
+    private readonly showtimeRepository: Repository<Showtime>,
+  ) {}
 
-    @InjectRepository(ScreeningSeat)
-    private readonly screeningSeatsRepository: Repository<ScreeningSeat>
-  ) { }
+  async create(dto: CreateBookingDto) {
+    this.logger.log(`Booking request: ${JSON.stringify(dto)}`);
 
-  async create(dto: CreateBookingDto): Promise<{ bookedSeats: string[] }> {
-    const { screeningId, seats } = dto;
-    this.logger.log(`Creating booking for screeningId=${screeningId} and seats=${seats.join(',')}`);
-
-    const screening = await this.screeningsRepository.findOne({ where: { id: screeningId } });
-    if (!screening) {
-      this.logger.warn(`Screening not found: ${screeningId}`);
-      throw new NotFoundException('Screening not found');
-    }
-
-    const seatRecords = await this.screeningSeatsRepository.find({
-      where: seats.map(seatName => ({ screening: { id: screeningId }, seatName }))
+    const showtime = await this.showtimeRepository.findOne({
+      where: { id: dto.showtimeId },
+      relations: ['seats'],
     });
 
-    const foundSeatNames = seatRecords.map(seat => seat.seatName);
-    const notInRange = seats.filter(seat => !foundSeatNames.includes(seat));
-    if (notInRange.length > 0) {
-      this.logger.warn(`Seats not in range: ${notInRange.join(',')}`);
-      throw new BadRequestException(`Seats not in range: ${notInRange.join(',')}`);
+    if (!showtime) {
+      this.logger.warn(`Showtime not found: ${dto.showtimeId}`);
+      throw new NotFoundException('Showtime not found');
     }
 
-    const unavailable = seatRecords.filter(seat => !seat.isAvailable).map(seat => seat.seatName);
-    if (unavailable.length > 0) {
-      this.logger.warn(`Seats unavailable: ${unavailable.join(',')}`);
-      throw new ConflictException(`Seats already taken: ${unavailable.join(',')}`);
+    const seat = showtime.seats.find((s) => s.number === dto.seatNumber);
+
+    if (!seat) {
+      this.logger.warn(`Seat ${dto.seatNumber} not found in showtime ${dto.showtimeId}`);
+      throw new BadRequestException(`Seat ${dto.seatNumber} not found in this showtime`);
     }
 
-    for (const seat of seatRecords) {
-      seat.isAvailable = false;
+    if (!seat.isAvailable) {
+      this.logger.warn(`Seat ${dto.seatNumber} is already taken`);
+      throw new BadRequestException(`Seat ${dto.seatNumber} is already taken`);
     }
-    await this.screeningSeatsRepository.save(seatRecords);
 
-    const booking = this.bookingsRepository.create({ screening, seatNames: seats });
+    seat.isAvailable = false;
+
+    const booking = this.bookingsRepository.create({
+      showtime,
+      seatNumber: dto.seatNumber,
+      userId: dto.userId,
+    });
+
     await this.bookingsRepository.save(booking);
+    await this.showtimeRepository.save(showtime);
 
-    this.logger.log(`Booking successful for seats: ${seats.join(',')}`);
-    return { bookedSeats: seats };
+    this.logger.log(`Booking success for seat ${dto.seatNumber}`);
+
+    return {
+      success: true,
+      bookedSeat: dto.seatNumber,
+    };
   }
 }

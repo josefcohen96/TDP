@@ -4,167 +4,116 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
 import { Booking } from '../src/modules/booking/entities/booking.entity';
-import { ScreeningSeat } from '../src/modules/screenings/entities/screening-seat.entity';
-import { Screening } from '../src/modules/screenings/entities/screening.entity';
+import { Showtime } from '../src/modules/showtimes/entities/showtime.entity';
+import { ShowtimeSeat } from '../src/modules/showtimes/entities/showtime-seat.entity';
 import { Movie } from '../src/modules/movies/entities/movie.entity';
 
 describe('BookingsController (e2e)', () => {
-    let app: INestApplication;
-    let dataSource: DataSource;
-    let screeningId: string;
+  let app: INestApplication;
+  let dataSource: DataSource;
+  let showtimeId: string;
+  let userId = '84438967-f68f-4fa0-b620-0f08217e76af';
 
-    beforeAll(async () => {
-        const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-        }).compile();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-        app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    await app.init();
+    dataSource = app.get(DataSource);
 
+    const movieRes = await request(app.getHttpServer())
+      .post('/movies')
+      .send({ title: 'Test Movie', duration: 120, genre: 'Action', rating: 8.2, releaseYear: 2022 })
+      .expect(201);
 
-        app.useGlobalPipes(
-            new ValidationPipe({
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                transform: true,
-            }),
-        );
+    const movieId = movieRes.body.id;
 
-        await app.init();
-        dataSource = app.get(DataSource);
+    const showtimeRes = await request(app.getHttpServer())
+      .post('/showtimes')
+      .send({
+        movieId,
+        theater: 'Hall 1',
+        startTime: '2025-05-01T20:00:00.000Z',
+        endTime: '2025-05-01T22:00:00.000Z',
+        price: 50,
+      })
+      .expect(201);
 
-        // Create a movie
-        const movieRes = await request(app.getHttpServer())
-            .post('/movies')
-            .send({
-                title: 'Booking Flow Movie',
-                duration: 100,
-                genre: 'Test',
-                rating: 7.9,
-                releaseYear: 2024
-            })
-            .expect(201);
+    showtimeId = showtimeRes.body.id;
+  });
 
-        const movieId = movieRes.body.id;
+  afterAll(async () => {
+    await dataSource.getRepository(Booking).delete({});
+    await dataSource.getRepository(ShowtimeSeat).delete({});
+    await dataSource.getRepository(Showtime).delete({});
+    await dataSource.getRepository(Movie).delete({});
+    await app.close();
+  });
 
-        // Create a screening using "Hall 1"
-        const screeningRes = await request(app.getHttpServer())
-            .post('/screenings')
-            .send({
-                movieId,
-                hallName: 'Hall 1',
-                startTime: '2025-05-01T18:00:00.000Z',
-                price: 42.5
-            })
-            .expect(201);
+  it('should book a valid seat', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 5, userId })
+      .expect(201);
 
-        screeningId = screeningRes.body.id;
-    });
+    expect(res.body.success).toBe(true);
+    expect(res.body.bookedSeat).toBe(5);
+  });
 
-    afterAll(async () => {
+  it('should fail booking an already booked seat', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 5, userId })
+      .expect(400);
 
-        await dataSource.getRepository(Booking).delete({}); 
-        await dataSource.getRepository(ScreeningSeat).delete({});
-        await dataSource.getRepository(Screening).delete({});
-        await dataSource.getRepository(Movie).delete({});
+    expect(res.body.message).toContain('already taken');
+  });
 
-        await app.close();
-    });
+  it('should fail booking seat not in layout', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 99, userId })
+      .expect(400);
 
-    it('should book a valid seat', async () => {
-        const res = await request(app.getHttpServer())
-            .post('/bookings')
-            .send({
-                screeningId,
-                seats: ['B1'],
-            })
-            .expect(201); 
+    expect(res.body.message).toContain('not found in');
+  });
 
-        expect(res.body.bookedSeats).toContain('B1');
-    });
+  it('should fail booking for non-existent showtime', async () => {
+    await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId: '00000000-0000-0000-0000-000000000000', seatNumber: 1, userId })
+      .expect(404);
+  });
 
-    it('should fail booking an already booked seat', async () => {
-        const res = await request(app.getHttpServer())
-            .post('/bookings')
-            .send({
-                screeningId,
-                seats: ['B1'],
-            })
-            .expect(409); 
+  it('should fail with missing seatNumber', async () => {
+    await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, userId })
+      .expect(400);
+  });
 
-        expect(res.body.message).toContain('Seats already taken');
-    });
+  it('should fail with invalid seatNumber (non-numeric)', async () => {
+    await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 'A1', userId })
+      .expect(400);
+  });
 
-    it('should fail booking seat not in layout', async () => {
-        const res = await request(app.getHttpServer())
-            .post('/bookings')
-            .send({
-                screeningId,
-                seats: ['Z9'],
-            })
-            .expect(400);
+  it('should book multiple available seats', async () => {
+    const res1 = await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 6, userId })
+      .expect(201);
 
-        expect(res.body.message).toContain('not in range');
-    });
+    const res2 = await request(app.getHttpServer())
+      .post('/bookings')
+      .send({ showtimeId, seatNumber: 7, userId })
+      .expect(201);
 
-    it('should return 404 for non-existent screening', async () => {
-        await request(app.getHttpServer())
-            .post('/bookings')
-            .send({
-                screeningId: '00000000-0000-0000-0000-000000000000',
-                seats: ['B1'],
-            })
-            .expect(404);
-    });
-
-    it('should fail when seats field is missing', async () => {
-        await request(app.getHttpServer())
-          .post('/bookings')
-          .send({ screeningId })
-          .expect(400);
-      });
-
-      it('should fail when seats is not an array', async () => {
-        await request(app.getHttpServer())
-          .post('/bookings')
-          .send({
-            screeningId,
-            seats: "B1", 
-          })
-          .expect(400);
-      });
-
-      it('should fail when seats is not an array', async () => {
-        await request(app.getHttpServer())
-          .post('/bookings')
-          .send({
-            screeningId,
-            seats: "B1", // string instead of array
-          })
-          .expect(400);
-      });
-
-      it('should book multiple available seats', async () => {
-        const res = await request(app.getHttpServer())
-          .post('/bookings')
-          .send({
-            screeningId,
-            seats: ["B2", "B3"],
-          })
-          .expect(201);
-      
-        expect(res.body.bookedSeats).toContain('B2');
-        expect(res.body.bookedSeats).toContain('B3');
-      });
-
-      it('should fail when one of the multiple seats is already taken', async () => {
-        const res = await request(app.getHttpServer())
-          .post('/bookings')
-          .send({
-            screeningId,
-            seats: ["B2", "B4"], // B2 booked last test
-          })
-          .expect(409);
-      
-        expect(res.body.message).toContain('Seats already taken');
-      });
+    expect(res1.body.bookedSeat).toBe(6);
+    expect(res2.body.bookedSeat).toBe(7);
+  });
 });

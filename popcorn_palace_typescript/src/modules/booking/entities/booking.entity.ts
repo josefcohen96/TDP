@@ -1,26 +1,24 @@
-import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    JoinColumn,
-    CreateDateColumn,
-  } from 'typeorm';
-  import { Screening } from '../../screenings/entities/screening.entity';
-  
-  @Entity()
-  export class Booking {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-  
-    @ManyToOne(() => Screening, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'screening_id' })
-    screening: Screening;
-  
-    @Column("simple-array")
-    seatNames: string[]; // ["A1", "A2"]
-  
-    @CreateDateColumn()
-    createdAt: Date;
-  }
-  
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import { Showtime } from '../../showtimes/entities/showtime.entity';
+
+@Entity()
+export class Booking {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => Showtime, { eager: true })
+  @JoinColumn({ name: 'showtimeId' })
+  showtime: Showtime;
+
+  @Column()
+  showtimeId: string;
+
+  @Column()
+  seatNumber: number;
+
+  @Column()
+  userId: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

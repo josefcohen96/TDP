@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Screening } from '../../screenings/entities/screening.entity';
+import { Showtime } from '../../showtimes/entities/showtime.entity';
 
 @Entity()
 export class Movie {
