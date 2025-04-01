@@ -6,7 +6,7 @@ export class Movie {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @Column({ nullable: true })  
@@ -20,7 +20,4 @@ export class Movie {
 
   @Column({ type: 'int', nullable: true }) 
   releaseYear: number;
-
-  @OneToMany(() => Screening, (screening) => screening.movie)
-  screenings: Screening[];
 }

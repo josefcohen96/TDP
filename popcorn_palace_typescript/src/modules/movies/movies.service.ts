@@ -23,36 +23,41 @@ export class MoviesService {
       throw new BadRequestException('Title and duration are required');
     }
 
+    const movieExists = await this.moviesRepository.findOneBy({ title: createMovieDto.title });
+
+    if (movieExists) {
+      this.logger.warn('Create failed: Movie already exists');
+      throw new BadRequestException('Movie already exists');
+    }
     const movie = this.moviesRepository.create(createMovieDto);
     this.logger.log(`Movie created: ${JSON.stringify(movie)}`);
 
     return this.moviesRepository.save(movie);
   }
 
-  async update(id: string, updateMovieDto: UpdateMovieDto): Promise<Movie> {
-
-    const movie = await this.moviesRepository.findOneBy({ id });
+  async update(title: string, updateMovieDto: UpdateMovieDto): Promise<Movie> {
+    const movie = await this.moviesRepository.findOneBy({ title });
+  
     if (!movie) {
-      this.logger.warn(`Update failed: Movie not found (ID: ${id})`);
+      this.logger.warn(`Update failed: Movie with title "${title}" not found`);
       throw new NotFoundException('Movie not found');
     }
-
-    const updated = Object.assign(movie, updateMovieDto);
-    this.logger.log(`Updating movie: ${JSON.stringify(updated)}`);
-
-    return this.moviesRepository.save(updated);
+  
+    const updatedMovie = Object.assign(movie, updateMovieDto);
+    this.logger.log(`Movie "${title}" updated: ${JSON.stringify(updateMovieDto)}`);
+  
+    return this.moviesRepository.save(updatedMovie);
   }
 
-  async remove(id: string): Promise<void> {
-
-    this.logger.log(`Removing movie with ID: ${id}`);
-    const result = await this.moviesRepository.delete(id);
+  async remove(title: string): Promise<void> {
+    const result = await this.moviesRepository.delete({ title });
+  
     if (result.affected === 0) {
-      this.logger.warn(`Remove failed: Movie not found (ID: ${id})`);
+      this.logger.warn(`Delete failed: Movie with title "${title}" not found`);
       throw new NotFoundException('Movie not found');
     }
-
-    this.logger.log(`Movie removed: ${id}`);
+  
+    this.logger.log(`Movie "${title}" deleted`);
   }
 
   findAll(): Promise<Movie[]> {
