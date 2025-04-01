@@ -6,10 +6,9 @@ import {
   Param,
   Patch,
   Delete,
-  Res,
-  HttpStatus
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { ScreeningsService } from './screenings.service';
 import { CreateScreeningDto } from './dto/create-screening.dto';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
@@ -19,67 +18,28 @@ export class ScreeningsController {
   constructor(private readonly screeningsService: ScreeningsService) {}
 
   @Post()
-  async create(@Body() createDto: CreateScreeningDto, @Res() res: Response) {
-    try {
-      const screening = await this.screeningsService.create(createDto);
-      return res.status(HttpStatus.CREATED).json(screening);
-    } catch (error) {
-      return res.status(error.getStatus?.() || 500).json({
-        statusCode: error.getStatus?.() || 500,
-        message: error.message || 'Unexpected error',
-      });
-    }
+  async create(@Body() createDto: CreateScreeningDto) {
+    return await this.screeningsService.create(createDto);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Res() res: Response) {
-    try {
-      const screening = await this.screeningsService.findOne(id);
-      return res.status(HttpStatus.OK).json(screening);
-    } catch (error) {
-      return res.status(error.getStatus?.() || 500).json({
-        statusCode: error.getStatus?.() || 500,
-        message: error.message || 'Unexpected error',
-      });
-    }
+  async findOne(@Param('id') id: string) {
+    return await this.screeningsService.findOne(id);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateScreeningDto, @Res() res: Response) {
-    try {
-      const updated = await this.screeningsService.update(id, dto);
-      return res.status(HttpStatus.OK).json(updated);
-    } catch (error) {
-      return res.status(error.getStatus?.() || 500).json({
-        statusCode: error.getStatus?.() || 500,
-        message: error.message || 'Unexpected error',
-      });
-    }
+  async update(@Param('id') id: string, @Body() dto: UpdateScreeningDto) {
+    return await this.screeningsService.update(id, dto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Res() res: Response) {
-    try {
-      await this.screeningsService.remove(id);
-      return res.status(HttpStatus.NO_CONTENT).send();
-    } catch (error) {
-      return res.status(error.getStatus?.() || 500).json({
-        statusCode: error.getStatus?.() || 500,
-        message: error.message || 'Unexpected error',
-      });
-    }
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.screeningsService.remove(id);
   }
 
   @Get()
-  async findAll(@Res() res: Response) {
-    try {
-      const result = await this.screeningsService.findAll();
-      return res.status(HttpStatus.OK).json(result);
-    } catch (error) {
-      return res.status(500).json({
-        statusCode: 500,
-        message: 'Failed to fetch screenings',
-      });
-    }
+  async findAll() {
+    return await this.screeningsService.findAll();
   }
 }

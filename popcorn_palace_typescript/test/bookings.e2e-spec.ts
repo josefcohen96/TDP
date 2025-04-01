@@ -80,9 +80,8 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['B1'],
             })
-            .expect(201);
+            .expect(201); // שינוי ל-201 כי אנחנו מחזירים תשובה עם create
 
-        expect(res.body.success).toBe(true);
         expect(res.body.bookedSeats).toContain('B1');
     });
 
@@ -93,10 +92,9 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['B1'],
             })
-            .expect(200);
+            .expect(409); // ConflictException
 
-        expect(res.body.success).toBe(false);
-        expect(res.body.unavailableSeats).toContain('B1');
+        expect(res.body.message).toContain('Seats already taken');
     });
 
     it('should fail booking seat not in layout', async () => {
@@ -106,10 +104,9 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['Z9'],
             })
-            .expect(200);
+            .expect(400); // BadRequestException
 
-        expect(res.body.success).toBe(false);
-        expect(res.body.notInRange).toContain('Z9');
+        expect(res.body.message).toContain('not in range');
     });
 
     it('should return 404 for non-existent screening', async () => {
@@ -119,6 +116,6 @@ describe('BookingsController (e2e)', () => {
                 screeningId: '00000000-0000-0000-0000-000000000000',
                 seats: ['B1'],
             })
-            .expect(404);
+            .expect(404); // NotFoundException
     });
 });
