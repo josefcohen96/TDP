@@ -151,7 +151,7 @@ describe('ShowtimesController (e2e)', () => {
 
   it('DELETE /showtimes/:id - should return 404 for non-existent showtime', async () => {
     await request(app.getHttpServer())
-      .delete('/showtimes/00000000-0000-0000-0000-1234567890123')
-      .expect(500); // TBD : check if should be 500 or 404
+      .delete('/showtimes/84438967-f68f-4fa0-b620-0f08217e76af')
+      .expect(404); 
   });
 });
