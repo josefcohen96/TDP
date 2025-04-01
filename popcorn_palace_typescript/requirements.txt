@@ -1,6 +1,0 @@
-@nestjs/typeorm
-typeorm
-pg
-class-validator
-class-transformer
-@nestjs/config
