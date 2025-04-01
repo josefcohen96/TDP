@@ -26,7 +26,7 @@ export class ShowtimesService {
 
     @InjectRepository(ShowtimeSeat)
     private readonly seatsRepository: Repository<ShowtimeSeat>,
-  ) {}
+  ) { }
 
   async create(dto: CreateShowtimeDto): Promise<Showtime> {
     if (dto.price <= 0) {
@@ -81,6 +81,15 @@ export class ShowtimesService {
   }
 
   async update(id: string, dto: UpdateShowtimeDto): Promise<Showtime> {
+
+    if (dto.movieId) {
+      const movie = await this.movieRepository.findOne({ where: { id: dto.movieId } });
+      if (!movie) {
+        this.logger.warn(`Movie not found: ${dto.movieId}`);
+        throw new BadRequestException('Movie not found');
+      }
+    }
+
     if (dto.price <= 0) {
       this.logger.warn(`Invalid price: ${dto.price}`);
       throw new BadRequestException('Price must be greater than 0');
@@ -127,6 +136,13 @@ export class ShowtimesService {
   }
 
   async remove(id: string): Promise<void> {
+    const existing = await this.showtimesRepository.findOne({ where: { id } });
+
+    if (!existing) {
+      this.logger.warn(`Showtime ${id} not found`);
+      throw new NotFoundException('Showtime not found');
+    }
+
     const result = await this.showtimesRepository.delete(id);
     if (result.affected === 0) {
       this.logger.warn(`Delete failed: Showtime ${id} not found`);

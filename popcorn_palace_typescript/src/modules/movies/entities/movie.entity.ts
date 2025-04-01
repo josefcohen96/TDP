@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { Min, Max } from 'class-validator';
+import { Min, Max} from 'class-validator';
 
 @Entity()
 export class Movie {
@@ -14,6 +14,7 @@ export class Movie {
 
   @Column()
   duration: number;
+  
   @Min(1)
   @Max(10)
   @Column({ type: 'float', nullable: true })

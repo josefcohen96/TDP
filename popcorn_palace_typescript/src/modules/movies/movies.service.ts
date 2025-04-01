@@ -24,7 +24,6 @@ export class MoviesService {
     }
 
     const movieExists = await this.moviesRepository.findOneBy({ title: createMovieDto.title });
-
     if (movieExists) {
       this.logger.warn('Create failed: Movie already exists');
       throw new BadRequestException('Movie already exists');

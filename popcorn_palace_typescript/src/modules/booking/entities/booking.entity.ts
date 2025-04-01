@@ -6,7 +6,7 @@ export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Showtime, { eager: true })
+  @ManyToOne(() => Showtime, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'showtimeId' })
   showtime: Showtime;
 

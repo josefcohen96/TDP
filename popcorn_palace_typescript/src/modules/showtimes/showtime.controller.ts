@@ -22,7 +22,7 @@ export class ShowtimesController {
     return this.showtimesService.create(dto);
   }
 
-  @Post('update/:id')
+  @Post('update/:title')
   @HttpCode(HttpStatus.OK)
   update(@Param('id') id: string, @Body() dto: UpdateShowtimeDto) {
     return this.showtimesService.update(id, dto);

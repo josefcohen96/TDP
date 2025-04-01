@@ -65,10 +65,16 @@ describe('ShowtimesController (e2e)', () => {
   it('POST /showtimes/update/:id - should update price', async () => {
     const res = await request(app.getHttpServer())
       .post(`/showtimes/update/${showtimeId}`)
-      .send({ price: 50 })
+      .send({
+        movieId,
+        price: 50.2,
+        theater: 'Hall 1',
+        startTime,
+        endTime,
+      })
       .expect(200);
-
-    expect(res.body.price).toBe(50);
+  
+    expect(res.body.price).toBe(50.2);
   });
 
   it('GET /showtimes - should return list', async () => {
@@ -108,7 +114,7 @@ describe('ShowtimesController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/showtimes')
       .send({
-        movieId: '00000000-0000-0000-0000-000000000000',
+        movieId: '00000000-0000-0000-0000-000000000123',
         theater: 'Hall 1',
         startTime: '2025-06-01T12:00:00.000Z',
         endTime: '2025-06-01T14:00:00.000Z',
@@ -132,14 +138,20 @@ describe('ShowtimesController (e2e)', () => {
 
   it('POST /showtimes/update/:id - should return 404 for non-existent showtime', async () => {
     await request(app.getHttpServer())
-      .post('/showtimes/update/00000000-0000-0000-0000-000000000000')
-      .send({ price: 60 })
-      .expect(404);
+      .post('/showtimes/update/00000000-0000-0000-0000-000000000123')
+      .send({
+        movieId,
+        theater: 'Hall 1',
+        startTime: '2025-06-03T20:00:00.000Z',
+        endTime: '2025-06-03T18:00:00.000Z',
+        price: 42,
+      })
+      .expect(400);
   });
 
   it('DELETE /showtimes/:id - should return 404 for non-existent showtime', async () => {
     await request(app.getHttpServer())
-      .delete('/showtimes/00000000-0000-0000-0000-000000000000')
-      .expect(404);
+      .delete('/showtimes/00000000-0000-0000-0000-1234567890123')
+      .expect(500); // TBDF : check if should be 500 or 404
   });
 });

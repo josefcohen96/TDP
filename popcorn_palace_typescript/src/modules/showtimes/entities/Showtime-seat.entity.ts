@@ -1,4 +1,3 @@
-// screening-seat.entity.ts
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Showtime } from './showtime.entity';
 
