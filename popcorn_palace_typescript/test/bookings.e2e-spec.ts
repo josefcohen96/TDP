@@ -60,15 +60,11 @@ describe('BookingsController (e2e)', () => {
     });
 
     afterAll(async () => {
-        const bookingRepo = dataSource.getRepository(Booking);
-        const seatRepo = dataSource.getRepository(ScreeningSeat);
-        const screeningRepo = dataSource.getRepository(Screening);
-        const movieRepo = dataSource.getRepository(Movie);
 
-        await bookingRepo.delete({});
-        await seatRepo.delete({});
-        await screeningRepo.delete({});
-        await movieRepo.delete({});
+        await dataSource.getRepository(Booking).delete({}); 
+        await dataSource.getRepository(ScreeningSeat).delete({});
+        await dataSource.getRepository(Screening).delete({});
+        await dataSource.getRepository(Movie).delete({});
 
         await app.close();
     });
@@ -80,7 +76,7 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['B1'],
             })
-            .expect(201); // שינוי ל-201 כי אנחנו מחזירים תשובה עם create
+            .expect(201); 
 
         expect(res.body.bookedSeats).toContain('B1');
     });
@@ -92,7 +88,7 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['B1'],
             })
-            .expect(409); // ConflictException
+            .expect(409); 
 
         expect(res.body.message).toContain('Seats already taken');
     });
@@ -104,7 +100,7 @@ describe('BookingsController (e2e)', () => {
                 screeningId,
                 seats: ['Z9'],
             })
-            .expect(400); // BadRequestException
+            .expect(400);
 
         expect(res.body.message).toContain('not in range');
     });
@@ -116,6 +112,58 @@ describe('BookingsController (e2e)', () => {
                 screeningId: '00000000-0000-0000-0000-000000000000',
                 seats: ['B1'],
             })
-            .expect(404); // NotFoundException
+            .expect(404);
     });
+
+    it('should fail when seats field is missing', async () => {
+        await request(app.getHttpServer())
+          .post('/bookings')
+          .send({ screeningId })
+          .expect(400);
+      });
+
+      it('should fail when seats is not an array', async () => {
+        await request(app.getHttpServer())
+          .post('/bookings')
+          .send({
+            screeningId,
+            seats: "B1", 
+          })
+          .expect(400);
+      });
+
+      it('should fail when seats is not an array', async () => {
+        await request(app.getHttpServer())
+          .post('/bookings')
+          .send({
+            screeningId,
+            seats: "B1", // string instead of array
+          })
+          .expect(400);
+      });
+
+      it('should book multiple available seats', async () => {
+        const res = await request(app.getHttpServer())
+          .post('/bookings')
+          .send({
+            screeningId,
+            seats: ["B2", "B3"],
+          })
+          .expect(201);
+      
+        expect(res.body.bookedSeats).toContain('B2');
+        expect(res.body.bookedSeats).toContain('B3');
+      });
+
+      it('should fail when one of the multiple seats is already taken', async () => {
+        const res = await request(app.getHttpServer())
+          .post('/bookings')
+          .send({
+            screeningId,
+            seats: ["B2", "B4"], // B2 booked last test
+          })
+          .expect(409);
+      
+        expect(res.body.message).toContain('Seats already taken');
+      });
 });

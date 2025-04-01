@@ -47,11 +47,12 @@ describe('MoviesController (e2e)', () => {
     });
 
     it('GET /movies - should return movie list', async () => {
-        await request(app.getHttpServer())
+        const res = await request(app.getHttpServer())
             .get('/movies')
             .expect(200);
 
-        expect(1);
+        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body.length).toBeGreaterThan(0);
     });
 
     it('PATCH /movies/:id - should update a movie', async () => {
@@ -82,4 +83,32 @@ describe('MoviesController (e2e)', () => {
         expect(updatedMovie.genere).toBe(originalMovie.genere);     // unchanged
         expect(updatedMovie.rating).toBe(originalMovie.rating);     // unchanged
     });
+
+    it('POST /movies - should fail without title', async () => {
+        await request(app.getHttpServer())
+            .post('/movies')
+            .send({ duration: 120, genre: "Drama", rating: 7.8, releaseYear: 2023 })
+            .expect(400);
+    });
+
+    it('POST /movies - should fail with non-numeric duration', async () => {
+        await request(app.getHttpServer())
+            .post('/movies')
+            .send({ title: "Test", duration: "abc", genre: "Drama", rating: 7.8, releaseYear: 2023 })
+            .expect(400);
+    });
+
+    it('PATCH /movies/:id - should return 404 for non-existent movie', async () => {
+        await request(app.getHttpServer())
+            .patch('/movies/00000000-0000-0000-0000-000000000000')
+            .send({ title: 'Nope' })
+            .expect(404);
+    });
+
+    it('DELETE /movies/:id - should return 404 for non-existent movie', async () => {
+        await request(app.getHttpServer())
+            .delete('/movies/00000000-0000-0000-0000-000000000000')
+            .expect(404);
+    });
+
 });

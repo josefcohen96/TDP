@@ -102,6 +102,54 @@ describe('ScreeningsController (e2e)', () => {
                 price: 42,
             })
             .expect(400);
-            
+    });
+
+    it('should fail when movie does not exist', async () => {
+        await request(app.getHttpServer())
+            .post('/screenings')
+            .send({
+                movieId: '00000000-0000-0000-0000-000000000000',
+                hallName: 'Hall 1',
+                startTime: '2025-06-01T12:00:00.000Z',
+                price: 42
+            })
+            .expect(400); // BadRequestException
+    });
+
+    it('should fail when hall does not exist', async () => {
+        await request(app.getHttpServer())
+            .post('/screenings')
+            .send({
+                movieId,
+                hallName: 'Unknown Hall',
+                startTime: '2025-06-01T12:00:00.000Z',
+                price: 42
+            })
+            .expect(404); // NotFoundException
+    });
+
+    it('should return 404 when trying to update non-existent screening', async () => {
+        await request(app.getHttpServer())
+            .patch('/screenings/00000000-0000-0000-0000-000000000000')
+            .send({ price: 60 })
+            .expect(404);
+    });
+
+    it('should return 404 when trying to delete non-existent screening', async () => {
+        await request(app.getHttpServer())
+            .delete('/screenings/00000000-0000-0000-0000-000000000000')
+            .expect(404);
+    });
+
+    it('should fail when price is negative', async () => {
+        await request(app.getHttpServer())
+            .post('/screenings')
+            .send({
+                movieId,
+                hallName: 'Hall 1',
+                startTime: '2025-07-01T18:00:00.000Z',
+                price: -10
+            })
+            .expect(400);
     });
 });
